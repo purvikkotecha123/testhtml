@@ -573,7 +573,7 @@
                         return res.json();
                     }).then((order_details) => {
                         console.log(order_details);
-                        let intent_object = intent === "authorize" ? "authorizations" : "captures";
+                       // let intent_object = intent === "authorize" ? "authorizations" : "captures";
                         if (order_details.purchase_units[0].payments[intent_object][0].status === "COMPLETED") {
                             current_ap_session.completePayment(ApplePaySession.STATUS_SUCCESS);
                             document.getElementById('captured').innerText=JSON.stringify(response);
