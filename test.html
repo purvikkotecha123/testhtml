@@ -1,0 +1,643 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Checkout Page</title>
+        <style>
+            main {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+            }
+            .data {
+              margin:20px 0px;
+              border:1px solid red;
+              border-radius:10px;
+              background-color:#ebebeb;
+              width: 330px;
+              padding : 10px;
+            }
+            input {
+                padding: 0;
+            }
+            #checkout-form {
+                width: fit-content;
+                display:flex;
+                flex-direction:column;
+            }
+            #card-number-field-container{
+                width: 100%;
+            }
+            .grp {
+                display: flex;
+            }
+            #card-expiry-field-container {
+                width: 200px;
+            }
+            #card-cvv-field-container {
+                width: 150px;
+            }
+            .output {
+                display: flex;
+            }
+            .box {
+                min-width:50%;
+                max-width: 50%;
+                margin-top: 20px;
+                padding:0px 10px;
+                display:flex;
+                flex-direction:column;
+              }
+              .card {
+                flex:1;
+                min-height: 200px;
+                background-color:#ebebeb;
+            }
+            .box > span {
+              
+            }
+            .paypal-button-container{
+              display:flex;
+              margin-top: 20px;
+              width: 350px;
+              justify-content:center;
+            }
+            #multi-card-field-button{
+              margin-top:20px;
+              border-radius:30px;
+              border:none;
+              padding:12px 0px;
+              font-size : 18px;
+              background-color : #0079C1;
+              color:white;
+              cursor:pointer;
+            }
+            #multi-card-field-button:hover {
+              background-color:	#00457C;
+            }
+        </style>
+    </head>
+    <body>
+      <main>
+        <div class='data'>
+          Below are hard coded amount<br />
+          Amount : $1 <br />
+          Platform_fee : $0.1 <br />
+          Currency : USD
+        </div>
+        <div id="checkout-form">
+          <div id="card-number-field-container"></div>
+          <div class="grp">
+            <div id="card-expiry-field-container"></div>
+            <div id="card-cvv-field-container"></div>
+          </div>
+          <button id="multi-card-field-button" type="button">Process Payment with Credit Card</button>
+        </div>
+        <div class="paypal-button-container paypal-button-container-1"></div>
+        <div class="paypal-button-container paypal-button-container-2"></div>
+        <div class="paypal-button-container paypal-button-container-3"></div>
+        <div class="paypal-button-container paypal-button-container-4"></div>
+        <div class="paypal-button-container paypal-button-container-5"></div>
+        <div class="paypal-button-container" id="gpay" style="width: 350px; height: 45px;"></div>
+        <div class="paypal-button-container" id="applepay-container"></div>
+        <div>
+        </main>
+        <span>Output</span>
+        <div class="output">
+          <div class="box">
+            <span>Order Creation response</span>
+            <div class="card" id="order_created"></div>
+          </div>
+          <div class="box">
+              <span>Order Capture response</span>
+              <div class="card" id="captured"></div>
+          </div>
+        </div>
+    </body>
+    <script src="https://www.paypal.com/sdk/js?client-id=Abr0LbOs-Tj65QDN--SyTnkPyTniJSsBM9GZX74IHC8o8Bmdi--iOFbKVNvc-r3WMVj6w7BTo28nxJ1w&components=card-fields,buttons,funding-eligibility,googlepay,applepay&merchant-id=N5WDLQ5FRDYSW&enable-funding=venmo,paylater&buyer-country=US"></script>
+    <script async src="https://pay.google.com/gp/p/js/pay.js" onload="onGooglePayLoaded()"></script>
+    <script src="https://applepay.cdn-apple.com/jsapi/v1/apple-pay-sdk.js"></script>
+
+      <script>
+       // Custom styles object (optional)
+       let orderId = "";
+       var FUNDING_SOURCES = [
+        paypal.FUNDING.PAYPAL,
+        paypal.FUNDING.VENMO,
+        paypal.FUNDING.PAYLATER
+    ]
+       const auth_token = "A21AAIz0lWEjzx36F-W_p3YhfmzhCswFquL8FSfNaO5oiFdvRsozVudrNelIfWFTFrjmI006hpqwD5hNa81YES02jQgCAvFcA";
+    //    const paypalAuthAssertion = "eyJhbGciOiJub25lIn0.eyJpc3MiOiJBWTQ4Nk1pVnk5Wng5d244dzdNakIxOTVibUtDR3NITnZaTDZYV1c3SXVJeVN6SWZLcXZ3RzF2RGlnb3o1UEdoNlJLYWNsQ1J4UHd4V1RQdCIsInBheWVyX2lkIjoiUEFSUTVIV1NMUE03NCJ9.";
+       const paypalAuthAssertion = "eyJhbGciOiJub25lIn0=.eyJpc3MiOiJBYnIwTGJPcy1UajY1UUROLS1TeVRua1B5VG5pSlNzQk05R1pYNzRJSEM4bzhCbWRpLS1pT0ZiS1ZOdmMtcjNXTVZqNnc3QlRvMjhueEoxdyIsInBheWVyX2lkIjoiOFFYM1NLOEpMQkRISiJ9.";
+       const orderData={
+        intent: "CAPTURE",
+        purchase_units: [
+            {
+                amount: {
+                    currency_code: "USD",
+                    value: "1.00"
+                },
+                payee :{
+                    merchant_id:"N5WDLQ5FRDYSW"
+                },
+                payment_instruction:{
+                    platform_fees:[{
+                        amount:{
+                            currency_code:"USD",
+                            value:"0.1"
+                        },
+                        payee: {
+                            merchant_id: "WYQ62ZZUY9454"
+                        }
+                    }],
+                    disbursement_mode:"INSTANT"
+                }
+            }
+        ],
+
+        payment_source:{
+            card:{
+                name: "Name",
+                billing_address: {
+                address_line_1: "2211 N First Street",
+                address_line_2: "17.3.160",
+                admin_area_1: "CA",
+                admin_area_2: "San Jose",
+                postal_code: "95131",
+                country_code: "US"
+                },
+                attributes:{
+                    verification:{
+                        method:"SCA_WHEN_REQUIRED"
+                    }
+                },
+                // experience_context:{
+                //     return_url:"http://127.0.0.1:5500/server/index.html",
+                //     cancel_url:"http://127.0.0.1:5500/server/index.html"
+                // }
+            }
+            // card: {
+            //     attributes: {
+            //         verification: {
+            //             method: "SCA_WHEN_REQUIRED"
+            //         }
+            //     }
+            // }
+        }
+       }
+        const styleObject = {
+            input: {
+                "font-size": "16 px",
+                "font-family": "monospace",
+                "font-weight": "lighter",
+                color: "black",
+            },
+            ".invalid": {
+            color: "red",
+            },
+            ":hover": {
+                color: "orange",
+            },
+            ".purple": {
+                color: "purple",
+            },
+        };
+        // Create the card fields component and define callbacks
+        const cardField = paypal.CardFields({
+            style: styleObject,
+            createOrder: function (data, actions) {
+                return fetch("https://api-m.sandbox.paypal.com/v2/checkout/orders", {
+                method: "post",
+                headers:{
+                    "Content-Type":"application/json",
+                    "Authorization":`Bearer ${auth_token}`,
+                    // "Paypal-Auth-Assertion":paypalAuthAssertion
+                },
+                body:JSON.stringify(orderData)
+                })
+                .then((res) => {
+                    return res.json();
+                })
+                .then((orderData) => {
+                    console.log(orderData);
+                    document.getElementById('order_created').innerText=JSON.stringify(orderData);
+                    orderId=orderData.id;
+                    return orderData.id;
+                });
+            },
+            onApprove: function (data, actions) {
+                console.log(actions);
+                const { orderID } = data;
+                return fetch(`https://api.sandbox.paypal.com/v2/checkout/orders/${orderID}/capture`, {
+                method: "post",
+                headers:{
+                    "Content-Type":"application/json",
+                    "Authorization":`Bearer ${auth_token}`,
+                    // "Paypal-Auth-Assertion":paypalAuthAssertion
+                }
+                })
+                .then((res) => {
+                    return res.json();
+                })
+                .then((orderData) => {
+                    // Redirect to success page
+                    console.log(orderData);
+                    document.getElementById('captured').innerText=JSON.stringify(orderData);
+
+                });
+            },
+            inputEvents: {
+                onChange: function (data) {
+                    // Handle a change event in any of the fields
+                },
+                onFocus: function(data) {
+                    // Handle a focus event in any of the fields
+                },
+                onBlur: function(data) {
+                    // Handle a blur event in any of the fields
+                },
+                onInputSubmitRequest: function(data) {
+                    // Handle an attempt to submit the entire card form
+                    // while focusing any of the fields
+                }
+            },
+        });
+        // Define the container for each field and the submit button
+        const cardNameContainer = document.getElementById("card-name-field-container"); // Optional field
+        const cardNumberContainer = document.getElementById("card-number-field-container");
+        const cardCvvContainer = document.getElementById("card-cvv-field-container");
+        const cardExpiryContainer = document.getElementById("card-expiry-field-container");
+        const multiCardFieldButton = document.getElementById("multi-card-field-button");
+        // Render each field after checking for eligibility
+        if (cardField.isEligible()) {
+            // const nameField = cardField.NameField();
+            // nameField.render(cardNameContainer);
+            const numberField = cardField.NumberField();
+            numberField.render(cardNumberContainer);
+            const cvvField = cardField.CVVField();
+            cvvField.render(cardCvvContainer);
+            const expiryField = cardField.ExpiryField();
+            expiryField.render(cardExpiryContainer);
+            // Add click listener to the submit button and call the submit function on the CardField component
+            multiCardFieldButton.addEventListener("click", () => {
+                cardField
+                .submit()
+                .then((data) => {
+                    // Handle a successful payment
+                    console.log(data);
+                })
+                .catch((err) => {
+                    // Handle an unsuccessful payment
+                });
+            });
+        }
+        let count = 1;
+        FUNDING_SOURCES.forEach((source) => {
+            console.log(source);
+            const button = paypal.Buttons({
+                style: {
+                    shape: "pill",
+                    layout: "vertical",
+                    color: "silver"
+                } ,
+                fundingSource: source,
+                createOrder: function (data, actions) {
+                    return fetch("https://api-m.sandbox.paypal.com/v2/checkout/orders", {
+                    method: "post",
+                    headers:{
+                        "Content-Type":"application/json",
+                        "Authorization":`Bearer ${auth_token}`,
+                        "Paypal-Auth-Assertion":paypalAuthAssertion
+                    },
+                    body:JSON.stringify(orderData)
+                    })
+                    .then((res) => {
+                        return res.json();
+                    })
+                    .then((orderData) => {
+                        console.log(orderData);
+                        document.getElementById('order_created').innerText=JSON.stringify(orderData);
+                        orderId=orderData.id;
+                        return orderData.id;
+                    });
+                },
+                onApprove: function (data, actions) {
+                    console.log(actions);
+                    const { orderID } = data;
+                    return fetch(`https://api.sandbox.paypal.com/v2/checkout/orders/${orderID}/capture`, {
+                    method: "post",
+                    headers:{
+                        "Content-Type":"application/json",
+                        "Authorization":`Bearer ${auth_token}`,
+                        "Paypal-Auth-Assertion":paypalAuthAssertion
+                    }
+                    })
+                    .then((res) => {
+                        return res.json();
+                    })
+                    .then((orderData) => {
+                        // Redirect to success page
+                        console.log(orderData);
+                        document.getElementById('captured').innerText=JSON.stringify(orderData);
+                    });
+                }
+            })
+            // console.log(button.isEligible());
+            if (button.isEligible()) {
+                button.render('.paypal-button-container'+`-${count}`);
+            }
+            count++;
+
+        });
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //            GOOGLEPAY
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        let googlePayConfig;
+        let paymentsClient;
+        // Initialize the PaymentsClient object
+        let isLive = false;
+        let environment = !isLive ? "TEST" : "PRODUCTION";
+        function getGooglePaymentsClient() {
+            return new google.payments.api.PaymentsClient({
+                environment: 'TEST',
+                MerchantInfo: googlePayConfig.MerchantInfo,
+                paymentDataCallbacks : {
+                    onPaymentAuthorized : onPaymentAuthorized
+                }
+            });
+        }
+        async function onGooglePayLoaded() {
+            await paypal.Googlepay().config().then((data) => {
+                // data.merchantInfo.merchantOrigin = "https://development.promotixapp.com/";
+                googlePayConfig = {...data};
+            }).catch(function(err) {
+                console.error(err);
+            });
+            // console.log(googlePayConfig);
+            // googlePayConfig = {...data};
+            paymentsClient = getGooglePaymentsClient(); 
+            paymentsClient.isReadyToPay(googlePayConfig)
+                .then(function(response) {
+                if (response.result) {
+                    addGooglePayButton();
+                }
+                })
+                .catch(function(err) {
+                console.error(err);
+                });
+        }
+
+        function addGooglePayButton() {
+            // const paymentsClient = getGooglePaymentsClient();
+            const button = paymentsClient.createButton({
+                buttonColor: 'white',
+                buttonType: 'plain',
+                buttonRadius: 4,
+                buttonSizeMode: 'fill',
+                onClick: onGooglePaymentButtonClicked /* To be defined later */,
+                allowedPaymentMethods: googlePayConfig.allowedPaymentMethods
+                });
+            document.getElementById('gpay').appendChild(button);
+        }
+        async function getGooglePaymentDataRequest() {
+            let paymentDataRequest = {
+                apiVersion : googlePayConfig.apiVersion,
+                apiVersionMinor : googlePayConfig.apiVersionMinor,
+                merchantInfo : googlePayConfig.merchantInfo,
+                allowedPaymentMethods : googlePayConfig.allowedPaymentMethods,
+                transactionInfo : getGoogleTransactionInfo(),
+                callbackIntents : ["PAYMENT_AUTHORIZATION"]
+            }
+            console.log("getGooglePaymentDataRequest() returns - ",paymentDataRequest);
+            return paymentDataRequest;
+        }
+
+        // Function called on payment authorization
+        async function onPaymentAuthorized(paymentData) {
+            return new Promise(async function (resolve, reject) {
+                try {
+                    const {id} = await fetch("https://api-m.sandbox.paypal.com/v2/checkout/orders", {
+                        method: "post",
+                        headers:{
+                            "Content-Type":"application/json",
+                            "Authorization":`Bearer ${auth_token}`,
+                            "Paypal-Auth-Assertion":paypalAuthAssertion
+                        },
+                        body:JSON.stringify(orderData)
+                    })
+                    .then((res) => {
+                        return res.json();
+                    })
+                    .then((orderData) => {
+                        console.log(orderData);
+                        document.getElementById('order_created').innerText=JSON.stringify(orderData);
+                        orderId=orderData.id;
+                        return orderData;
+                    });
+                    const confirmOrderResponse = await paypal.Googlepay().confirmOrder({
+                        orderId: id,
+                        paymentMethodData: paymentData.paymentMethodData
+                    });
+                    /** Capture the Order on your Server  */
+                    if(confirmOrderResponse.status === "APPROVED"){
+                        const response =  await fetch(`https://api.sandbox.paypal.com/v2/checkout/orders/${id}/capture`, {
+                                                        method: "post",
+                                                        headers:{
+                                                            "Content-Type":"application/json",
+                                                            "Authorization":`Bearer ${auth_token}`,
+                                                            "Paypal-Auth-Assertion":paypalAuthAssertion
+                                                        }
+                                                    })
+                                                    .then((res) => {
+                                                        return res.json();
+                                                    });
+                        if(response.capture.status === "COMPLETED") {
+                            document.getElementById('captured').innerText=JSON.stringify(response);
+                            resolve({transactionState: 'SUCCESS'});
+                        } else {
+                            resolve({
+                                transactionState: 'ERROR',
+                                error: {
+                                    intent: 'PAYMENT_AUTHORIZATION',
+                                    message: 'TRANSACTION FAILED',
+                                }
+                            })
+                        }
+                    } else {
+                        resolve({
+                        transactionState: 'ERROR',
+                        error: {
+                            intent: 'PAYMENT_AUTHORIZATION',
+                            message: 'TRANSACTION FAILED',
+                        }
+                        })
+                    }
+                } catch(err) {
+                    resolve({
+                    transactionState: 'ERROR',
+                    error: {
+                        intent: 'PAYMENT_AUTHORIZATION',
+                        message: err.message,
+                    }
+                    })
+                }
+            });
+        }
+        function getGoogleTransactionInfo(){
+            return {
+                currencyCode: 'USD',
+                countryCode: "US",
+                totalPriceStatus: 'FINAL',
+                totalPrice: '1.00' // Your amount
+            }
+        }
+
+        async function onGooglePaymentButtonClicked() {
+            const paymentDataRequest = await getGooglePaymentDataRequest();
+            // console.log(paymentDataRequest);
+            paymentsClient.loadPaymentData(paymentDataRequest);
+        }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        let check_applepay = async () => {
+            return new Promise((resolve, reject) => {
+                let error_message = "";
+                if (!window.ApplePaySession) {
+                    error_message = "This device does not support Apple Pay";
+                } else if (!ApplePaySession.canMakePayments()) {
+                    error_message = "This device, although an Apple device, is not capable of making Apple Pay payments";
+                }
+                if (error_message !== "") {
+                    reject(error_message);
+                } else {
+                    resolve();
+                }
+            });
+        };
+        let global_apple_pay_config;
+        //Begin Displaying of ApplePay Button
+        check_applepay()
+            .then(() => {
+                applepay = paypal.Applepay();
+                applepay.config()
+                    .then(applepay_config => {
+                        if (applepay_config.isEligible) {
+                            document.getElementById("applepay-container").innerHTML = '<apple-pay-button id="applepay_button" buttonstyle="black" type="plain" locale="en">';
+                            global_apple_pay_config = applepay_config;
+                            document.getElementById("applepay_button").addEventListener("click", handle_applepay_clicked);
+                        }
+                    })
+                    .catch(applepay_config_error => {
+                        console.error('Error while fetching Apple Pay configuration:');
+                        console.error(applepay_config_error);
+                    });
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+
+        let ap_payment_authed = async (event) => {
+            applepay_payment_event = event.payment;
+            fetch("https://api-m.sandbox.paypal.com/v2/checkout/orders", {
+                        method: "post",
+                        headers:{
+                            "Content-Type":"application/json",
+                            "Authorization":`Bearer ${auth_token}`,
+                            "Paypal-Auth-Assertion":paypalAuthAssertion
+                        },
+                        body:JSON.stringify(orderData)
+                    })
+            .then((response) => response.json())
+            .then((orderData) => {
+                console.log(orderData);
+                document.getElementById('order_created').innerText=JSON.stringify(orderData);
+                orderId=orderData.id;
+                return orderData;
+            })
+            .then((pp_data) => {
+                pp_order_id = pp_data.id;
+                apple_pay_email = applepay_payment_event.shippingContact.emailAddress;
+                applepay.confirmOrder({
+                    orderId: pp_order_id,
+                    token: applepay_payment_event.token,
+                    billingContact: applepay_payment_event.billingContact
+                })
+                .then( async (confirmResult) => {
+                    const response =  await fetch(`https://api.sandbox.paypal.com/v2/checkout/orders/${id}/capture`, {
+                        method: "post",
+                        headers:{
+                            "Content-Type":"application/json",
+                            "Authorization":`Bearer ${auth_token}`,
+                            "Paypal-Auth-Assertion":paypalAuthAssertion
+                        }
+                    }).then((res) => {
+                        return res.json();
+                    }).then((order_details) => {
+                        let intent_object = intent === "authorize" ? "authorizations" : "captures";
+                        if (order_details.purchase_units[0].payments[intent_object][0].status === "COMPLETED") {
+                            current_ap_session.completePayment(ApplePaySession.STATUS_SUCCESS);
+                            document.getElementById('captured').innerText=JSON.stringify(response);
+                            display_success_message({"order_details": order_details, "paypal_buttons": paypal_buttons});
+                        } else {
+                            current_ap_session.completePayment(ApplePaySession.STATUS_FAILURE);
+                            console.log(order_details);
+                            throw error("payment was not completed, please view console for more information");
+                        }
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                        display_error_alert();
+                    });
+                })
+                .catch(confirmError => {
+                    if (confirmError) {
+                        console.error('Error confirming order with applepay token');
+                        console.error(confirmError);
+                        current_ap_session.completePayment(ApplePaySession.STATUS_FAILURE);
+                        display_error_alert();
+                    }
+                });
+            });
+        };
+
+        let ap_validate = async (event) => {
+            applepay.validateMerchant({
+                validationUrl: event.validationURL,
+                displayName: "My Demo Company"
+            })
+            .then(validateResult => {
+                current_ap_session.completeMerchantValidation(validateResult.merchantSession);
+            })
+            .catch(validateError => {
+                console.error(validateError);
+                current_ap_session.abort();
+            });
+        };
+
+        let handle_applepay_clicked = (event) => {
+            const payment_request = {
+                countryCode: global_apple_pay_config.countryCode,
+                merchantCapabilities: global_apple_pay_config.merchantCapabilities,
+                supportedNetworks: global_apple_pay_config.supportedNetworks,
+                currencyCode: "USD",
+                requiredShippingContactFields: ["name", "phone", "email", "postalAddress"],
+                requiredBillingContactFields: ["postalAddress"],
+                total: {
+                    label: "My Demo Company",
+                    type: "final",
+                    amount: "1.0",
+                }
+            };
+
+            current_ap_session = new ApplePaySession(4, payment_request);
+            current_ap_session.onvalidatemerchant = ap_validate;
+            current_ap_session.onpaymentauthorized = ap_payment_authed;
+            // current_ap_session.oncancel = () => {
+            //     console.log("Apple Pay session canceled.");
+            //     current_ap_session = null;
+            // };
+            current_ap_session.begin();
+        };
+        
+      </script>
+</html>
+    
